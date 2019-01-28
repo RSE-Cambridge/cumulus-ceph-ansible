@@ -226,11 +226,10 @@ osds_per_device: 1
 lvm_volumes:
   - data: ceph-hdd-a-0
     data_vg: ceph-hdd-a
-    db: osd-a
+    db: ceph-ssd-a
     db_vg: ceph-ssd
   - data: ceph-hdd-b-0
     data_vg: ceph-hdd-b
-    db: ceph-ssd-b
     db_vg: ceph-ssd
   - data: ceph-hdd-c-0
     data_vg: ceph-hdd-c
