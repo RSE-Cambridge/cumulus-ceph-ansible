@@ -5,7 +5,6 @@
 
 # Dummy variable to avoid error because ansible does not recognize the
 # file as a good configuration file when no variable in it.
-dummy:
 
 # You can override default vars defined in defaults/main.yml here,
 # but I would advice to use host or group vars instead
@@ -82,7 +81,7 @@ dummy:
 #
 # Note: This scenario uses the ceph-disk tool to provision OSDs
 
-#osd_scenario: dummy
+osd_scenario: lvm
 #valid_osd_scenarios:
 #  - collocated
 #  - non-collocated
@@ -223,7 +222,20 @@ dummy:
 
 #lvm_volumes: []
 #crush_device_class: ""
-#osds_per_device: 1
+osds_per_device: 1
+lvm_volumes:
+  - data: ceph-hdd-a
+    db: ceph-ssd-a
+    db_vg: ceph-ssd
+  - data: ceph-hdd-b
+    db: ceph-ssd-b
+    db_vg: ceph-ssd
+  - data: ceph-hdd-c
+    db: ceph-ssd-c
+    db_vg: ceph-ssd
+  - data: ceph-hdd-d
+    db: ceph-ssd-d
+    db_vg: ceph-ssd
 
 
 ##########
