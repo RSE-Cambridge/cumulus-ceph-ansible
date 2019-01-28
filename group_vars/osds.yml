@@ -221,19 +221,23 @@ osd_scenario: lvm
 #   - data: /dev/sdb1
 
 #lvm_volumes: []
-#crush_device_class: ""
+crush_device_class: "hdd"
 osds_per_device: 1
 lvm_volumes:
-  - data: ceph-hdd-a
-    db: ceph-ssd-a
+  - data: ceph-hdd-a-0
+    data_vg: ceph-hdd-a
+    db: osd-a
     db_vg: ceph-ssd
-  - data: ceph-hdd-b
+  - data: ceph-hdd-b-0
+    data_vg: ceph-hdd-b
     db: ceph-ssd-b
     db_vg: ceph-ssd
-  - data: ceph-hdd-c
+  - data: ceph-hdd-c-0
+    data_vg: ceph-hdd-c
     db: ceph-ssd-c
     db_vg: ceph-ssd
-  - data: ceph-hdd-d
+  - data: ceph-hdd-d-0
+    data_vg: ceph-hdd-d
     db: ceph-ssd-d
     db_vg: ceph-ssd
 
