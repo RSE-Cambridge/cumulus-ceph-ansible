@@ -239,6 +239,42 @@ lvm_volumes:
     data_vg: ceph-hdd-d
     db: ceph-ssd-d
     db_vg: ceph-ssd
+  - data: ceph-hdd-e-0
+    data_vg: ceph-hdd-e
+    db: ceph-ssd-e
+    db_vg: ceph-ssd
+  - data: ceph-hdd-f-0
+    data_vg: ceph-hdd-f
+    db: ceph-ssd-f
+    db_vg: ceph-ssd
+  - data: ceph-hdd-g-0
+    data_vg: ceph-hdd-g
+    db: ceph-ssd-g
+    db_vg: ceph-ssd
+  - data: ceph-hdd-h-0
+    data_vg: ceph-hdd-h
+    db: ceph-ssd-h
+    db_vg: ceph-ssd
+  - data: ceph-hdd-i-0
+    data_vg: ceph-hdd-i
+    db: ceph-ssd-i
+    db_vg: ceph-ssd
+  - data: ceph-hdd-j-0
+    data_vg: ceph-hdd-j
+    db: ceph-ssd-j
+    db_vg: ceph-ssd
+  - data: ceph-hdd-k-0
+    data_vg: ceph-hdd-k
+    db: ceph-ssd-k
+    db_vg: ceph-ssd
+  - data: ceph-hdd-l-0
+    data_vg: ceph-hdd-l
+    db: ceph-ssd-l
+    db_vg: ceph-ssd
+  - data: ceph-hdd-m-0
+    data_vg: ceph-hdd-m
+    db: ceph-ssd-m
+    db_vg: ceph-ssd
 
 
 ##########
