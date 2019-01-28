@@ -12,7 +12,6 @@ group_vars/restapis
 group_vars/agent
 group_vars/*.yml
 *.DS_Store
-/*.yml
 *.pyc
 *.sw?
 .tox
