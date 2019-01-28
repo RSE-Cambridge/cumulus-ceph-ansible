@@ -7,12 +7,12 @@ ceph03
 ceph01
 
 [mons:children]
-stroage
+storage
 
 [mdss:children]
 mons
 
-[rgs:children]
+[rgws:children]
 mons
 
 [osds:children]
