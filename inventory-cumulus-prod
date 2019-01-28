@@ -1,7 +1,7 @@
 [storage]
-ceph01
-ceph02
-ceph03
+ceph01 ansible_host=10.200.1.5
+ceph02 ansible_host=10.200.1.6
+ceph03 ansible_host=10.200.1.7
 
 [mgrs]
 ceph01
