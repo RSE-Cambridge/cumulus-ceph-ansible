@@ -296,7 +296,7 @@ cephx: true
 #rbd_cache_writethrough_until_flush: "true"
 #rbd_concurrent_management_ops: 20
 
-#rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
+rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
 
 # Permissions for the rbd_client_log_path and
 # rbd_client_admin_socket_path. Depending on your use case for Ceph
@@ -311,10 +311,10 @@ cephx: true
 # want to set these differently:
 #
 # For OpenStack on RHEL, you'll want:
-#   rbd_client_directory_owner: "qemu"
-#   rbd_client_directory_group: "libvirtd" (or "libvirt", depending on your version of libvirt)
-#   rbd_client_directory_mode: "0755"
-#
+rbd_client_directory_owner: "qemu"
+rbd_client_directory_group: "libvirtd"
+rbd_client_directory_mode: "0755"
+
 # For OpenStack on Ubuntu or Debian, set:
 #    rbd_client_directory_owner: "libvirt-qemu"
 #    rbd_client_directory_group: "kvm"
@@ -351,6 +351,10 @@ ip_version: ipv4
 cephfs: cephfs # name of the ceph filesystem
 cephfs_data: cephfs_data # name of the data pool for a given filesystem
 cephfs_metadata: cephfs_metadata # name of the metadata pool for a given filesystem
+
+# make clusters healthy by setting pg high enough
+osd_pool_default_pg_num: 128
+osd_pool_default_size: 3
 
 cephfs_pools:
   - { name: "{{ cephfs_data }}", pgs: "{{ osd_pool_default_pg_num }}", size: "{{ osd_pool_default_size }}" }
