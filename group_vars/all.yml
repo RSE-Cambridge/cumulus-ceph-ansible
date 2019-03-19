@@ -520,6 +520,19 @@ radosgw_interface: breno3.206
 #
 #ceph_conf_overrides: {}
 
+ceph_conf_overrides:
+  "client.rgw.{{ hostvars[inventory_hostname]['ansible_hostname'] }}":
+    "rgw keystone api version": "3"
+    "rgw keystone url": "http://10.205.0.1:35357"
+    "rgw keystone admin user": "ceph"
+    "rgw keystone admin password": "todo-vault-thing-here"
+    "rgw keystone admin project": "admin"
+    "rgw keystone admin domain": "default"
+    "rgw keystone accepted roles": "admin, ceph"
+    "rgw keystone token cache size": "10000"
+    "rgw keystone revocation interval": "900"
+    "rgw s3 auth use keystone": "true"
+    "nss db path": "/var/lib/ceph/radosgw/ceph-radosgw.{{ ansible_hostname }}/nss"
 
 #############
 # OS TUNING #
