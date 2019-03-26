@@ -353,7 +353,7 @@ cephfs_data: cephfs_data # name of the data pool for a given filesystem
 cephfs_metadata: cephfs_metadata # name of the metadata pool for a given filesystem
 
 # make clusters healthy by setting pg high enough
-osd_pool_default_pg_num: 128
+osd_pool_default_pg_num: 512
 osd_pool_default_size: 3
 
 cephfs_pools:
