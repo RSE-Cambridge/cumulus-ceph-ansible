@@ -70,11 +70,16 @@ fi
 # MAIN #
 ########
 
+{% if ceph_osd_numactl_opts != "" %}
+numactl \
+{{ ceph_osd_numactl_opts }} \
+{% endif %}
 /usr/bin/docker run \
   --rm \
   --net=host \
   --privileged=true \
   --pid=host \
+  --ipc=host \
   --memory={{ ceph_osd_docker_memory_limit }} \
   {% if ceph_docker_version.split('.')[0] is version_compare('13', '>=') -%}
   --cpus={{ ceph_osd_docker_cpu_limit }} \
@@ -92,6 +97,7 @@ fi
   -v /var/lib/ceph:/var/lib/ceph:z \
   -v /etc/ceph:/etc/ceph:z \
   -v /var/run/ceph:/var/run/ceph:z \
+  -v /var/run/udev/:/var/run/udev/:z \
   {% if ansible_distribution == 'Ubuntu' -%}
   --security-opt apparmor:unconfined \
   {% endif -%}
