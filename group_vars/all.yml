@@ -296,7 +296,7 @@ cephx: true
 #rbd_cache_writethrough_until_flush: "true"
 #rbd_concurrent_management_ops: 20
 
-rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
+#rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
 
 # Permissions for the rbd_client_log_path and
 # rbd_client_admin_socket_path. Depending on your use case for Ceph
@@ -311,9 +311,9 @@ rbd_client_directories: true # this will create rbd_client_log_path and rbd_clie
 # want to set these differently:
 #
 # For OpenStack on RHEL, you'll want:
-rbd_client_directory_owner: "qemu"
-rbd_client_directory_group: "libvirtd"
-rbd_client_directory_mode: "0755"
+#rbd_client_directory_owner: "qemu"
+#rbd_client_directory_group: "libvirtd"
+#rbd_client_directory_mode: "0755"
 
 # For OpenStack on Ubuntu or Debian, set:
 #    rbd_client_directory_owner: "libvirt-qemu"
@@ -338,7 +338,7 @@ rbd_client_directory_mode: "0755"
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each monitor which address the monitor will bind to you can set it in your **inventory host file** by using 'monitor_address' variable.
 # Preference will go to monitor_address if both monitor_address and monitor_interface are defined.
-monitor_interface: breno3.206
+monitor_interface: brbond0.206
 #monitor_address: 0.0.0.0
 #monitor_address_block: subnet
 # set to either ipv4 or ipv6, whichever your network is using
@@ -406,7 +406,7 @@ mds_max_mds: 2
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each radosgw node which address the radosgw will bind to you can set it in your **inventory host file** by using 'radosgw_address' variable.
 # Preference will go to radosgw_address if both radosgw_address and radosgw_interface are defined.
-radosgw_interface: breno3.206
+radosgw_interface: brbond0.205
 #radosgw_address: 0.0.0.0
 #radosgw_address_block: subnet
 #radosgw_keystone_ssl: true # activate this when using keystone PKI keys
@@ -524,15 +524,24 @@ ceph_conf_overrides:
   "client.rgw.{{ hostvars[inventory_hostname]['ansible_hostname'] }}":
     "rgw keystone api version": "3"
     "rgw keystone url": "http://10.205.0.1:35357"
-    "rgw keystone admin user": "ceph"
-    "rgw keystone admin password": "todo-vault-thing-here"
-    "rgw keystone admin project": "admin"
+    "rgw keystone admin user": "manila"
+    "rgw keystone admin project": "service"
     "rgw keystone admin domain": "default"
     "rgw keystone accepted roles": "admin, ceph"
+    "rgw keystone accepted admin roles": "ResellerAdmin"
     "rgw keystone token cache size": "10000"
     "rgw keystone revocation interval": "900"
     "rgw s3 auth use keystone": "true"
+    "rgw swift versioning enabled": "true"
     "nss db path": "/var/lib/ceph/radosgw/ceph-radosgw.{{ ansible_hostname }}/nss"
+    "rgw keystone admin password": !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          39663165646463316463653137326666366630313636313238616263666166626161336235373735
+          3037353564636237313564366464633434353439646366310a323138303936396163363533313361
+          36613066343734653866303030373163306537356564343166663833313935343637373036326264
+          3337363630323433340a386531653861333534373133353234663662323836323837613363653337
+          63613138303730666532336466363434616563396164633236653862653630306562373434666535
+          3533613434343339316666316136313833346364666666636237
 
 #############
 # OS TUNING #
