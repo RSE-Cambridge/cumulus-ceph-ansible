@@ -681,10 +681,10 @@ openstack_pools:
   - "{{ openstack_glance_pool }}"
   - "{{ openstack_cinder_pool }}"
   - "{{ openstack_nova_pool }}"
-#  - "{{ openstack_cinder_backup_pool }}"
-#  - "{{ openstack_gnocchi_pool }}"
+  - "{{ openstack_cinder_backup_pool }}"
   - "{{ openstack_cephfs_data_pool }}"
   - "{{ openstack_cephfs_metadata_pool }}"
+#  - "{{ openstack_gnocchi_pool }}"
 
 
 # The value for 'key' can be a pre-generated key,
