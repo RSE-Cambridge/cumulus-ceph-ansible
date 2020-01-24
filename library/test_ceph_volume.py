@@ -39,8 +39,9 @@ class TestCephVolumeModule(object):
     def test_container_exec(sefl):
         fake_binary = "ceph-volume"
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',
@@ -54,8 +55,9 @@ class TestCephVolumeModule(object):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda'}
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',
@@ -78,6 +80,19 @@ class TestCephVolumeModule(object):
                                  'zap',
                                  '--destroy',
                                  '/dev/sda']
+        result = ceph_volume.zap_devices(fake_module, fake_container_image)
+        assert result == expected_command_list
+
+    def test_zap_osd_fsid(self):
+        fake_module = MagicMock()
+        fake_module.params = {'osd_fsid': 'a_uuid'}
+        fake_container_image = None
+        expected_command_list = ['ceph-volume',
+                                 'lvm',
+                                 'zap',
+                                 '--destroy',
+                                 '--osd-fsid',
+                                 'a_uuid']
         result = ceph_volume.zap_devices(fake_module, fake_container_image)
         assert result == expected_command_list
 
@@ -108,8 +123,9 @@ class TestCephVolumeModule(object):
         fake_module = MagicMock()
         fake_module.params = {'cluster': 'ceph', 'data': '/dev/sda'}
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',
@@ -134,8 +150,9 @@ class TestCephVolumeModule(object):
 
         fake_action = "create"
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',
@@ -181,8 +198,9 @@ class TestCephVolumeModule(object):
 
         fake_action = "prepare"
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',
@@ -229,8 +247,9 @@ class TestCephVolumeModule(object):
                               'batch_devices': ["/dev/sda", "/dev/sdb"]}
 
         fake_container_image = "docker.io/ceph/daemon:latest-luminous"
-        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host',  # noqa E501
+        expected_command_list = ['docker', 'run', '--rm', '--privileged', '--net=host', '--ipc=host',  # noqa E501
                                  '-v', '/run/lock/lvm:/run/lock/lvm:z',
+                                 '-v', '/var/run/udev/:/var/run/udev/:z',
                                  '-v', '/dev:/dev', '-v', '/etc/ceph:/etc/ceph:z',  # noqa E501
                                  '-v', '/run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket',  # noqa E501
                                  '-v', '/var/lib/ceph/:/var/lib/ceph/:z',

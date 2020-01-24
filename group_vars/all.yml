@@ -100,7 +100,8 @@ cluster: ceph
 
 # Enable the ntp service by default to avoid clock skew on ceph nodes
 # Disable if an appropriate NTP client is already installed and configured
-ntp_service_enabled: true
+# kayobe deals with ntp, skip it here
+ntp_service_enabled: false
 
 # Set type of NTP client daemon to use, valid entries are chronyd, ntpd or timesyncd
 # Note that this selection is currently ignored on containerized deployments
@@ -296,7 +297,7 @@ cephx: true
 #rbd_cache_writethrough_until_flush: "true"
 #rbd_concurrent_management_ops: 20
 
-rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
+#rbd_client_directories: true # this will create rbd_client_log_path and rbd_client_admin_socket_path directories with proper permissions
 
 # Permissions for the rbd_client_log_path and
 # rbd_client_admin_socket_path. Depending on your use case for Ceph
@@ -311,9 +312,9 @@ rbd_client_directories: true # this will create rbd_client_log_path and rbd_clie
 # want to set these differently:
 #
 # For OpenStack on RHEL, you'll want:
-rbd_client_directory_owner: "qemu"
-rbd_client_directory_group: "libvirtd"
-rbd_client_directory_mode: "0755"
+#rbd_client_directory_owner: "qemu"
+#rbd_client_directory_group: "libvirtd"
+#rbd_client_directory_mode: "0755"
 
 # For OpenStack on Ubuntu or Debian, set:
 #    rbd_client_directory_owner: "libvirt-qemu"
@@ -338,7 +339,7 @@ rbd_client_directory_mode: "0755"
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each monitor which address the monitor will bind to you can set it in your **inventory host file** by using 'monitor_address' variable.
 # Preference will go to monitor_address if both monitor_address and monitor_interface are defined.
-monitor_interface: breno3.206
+monitor_interface: brbond0.206
 #monitor_address: 0.0.0.0
 #monitor_address_block: subnet
 # set to either ipv4 or ipv6, whichever your network is using
@@ -353,7 +354,7 @@ cephfs_data: cephfs_data # name of the data pool for a given filesystem
 cephfs_metadata: cephfs_metadata # name of the metadata pool for a given filesystem
 
 # make clusters healthy by setting pg high enough
-osd_pool_default_pg_num: 128
+osd_pool_default_pg_num: 512
 osd_pool_default_size: 3
 
 cephfs_pools:
@@ -389,9 +390,10 @@ mds_max_mds: 2
 
 ## Rados Gateway options
 #
-#radosgw_frontend_type: civetweb # For additionnal frontends see: http://docs.ceph.com/docs/mimic/radosgw/frontends/
+# For additionnal frontends see: http://docs.ceph.com/docs/mimic/radosgw/frontends/
+radosgw_frontend_type: civetweb
 
-#radosgw_civetweb_port: 8080
+radosgw_civetweb_port: 6780
 #radosgw_civetweb_num_threads: 100
 #radosgw_civetweb_options: "num_threads={{ radosgw_civetweb_num_threads }}"
 # For additional civetweb configuration options available such as SSL, logging,
@@ -406,7 +408,7 @@ mds_max_mds: 2
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each radosgw node which address the radosgw will bind to you can set it in your **inventory host file** by using 'radosgw_address' variable.
 # Preference will go to radosgw_address if both radosgw_address and radosgw_interface are defined.
-radosgw_interface: brbond0.206
+radosgw_interface: brbond0.205
 #radosgw_address: 0.0.0.0
 #radosgw_address_block: subnet
 #radosgw_keystone_ssl: true # activate this when using keystone PKI keys
@@ -520,6 +522,28 @@ radosgw_interface: brbond0.206
 #
 #ceph_conf_overrides: {}
 
+ceph_conf_overrides:
+  "client.rgw.{{ hostvars[inventory_hostname]['ansible_hostname'] }}":
+    "rgw keystone api version": "3"
+    "rgw keystone url": "http://10.205.0.1:35357"
+    "rgw keystone admin user": "manila"
+    "rgw keystone admin project": "service"
+    "rgw keystone admin domain": "default"
+    "rgw keystone accepted roles": "admin, ceph"
+    "rgw keystone accepted admin roles": "ResellerAdmin"
+    "rgw keystone token cache size": "10000"
+    "rgw keystone revocation interval": "900"
+    "rgw s3 auth use keystone": "true"
+    "rgw swift versioning enabled": "true"
+    "rgw keystone admin password": !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          39663165646463316463653137326666366630313636313238616263666166626161336235373735
+          3037353564636237313564366464633434353439646366310a323138303936396163363533313361
+          36613066343734653866303030373163306537356564343166663833313935343637373036326264
+          3337363630323433340a386531653861333534373133353234663662323836323837613363653337
+          63613138303730666532336466363434616563396164633236653862653630306562373434666535
+          3533613434343339316666316136313833346364666666636237
+#    "nss db path": "/var/lib/ceph/radosgw/ceph-radosgw.{{ ansible_hostname }}/nss"
 
 #############
 # OS TUNING #
@@ -631,6 +655,7 @@ openstack_pools:
   - "{{ openstack_nova_pool }}"
   - "{{ openstack_cephfs_data_pool }}"
   - "{{ openstack_cephfs_metadata_pool }}"
+#  - "{{ openstack_gnocchi_pool }}"
 
 # The value for 'key' can be a pre-generated key,
 # e.g key: "AQDC2UxZH4yeLhAAgTaZb+4wDUlYOsr1OfZSpQ=="
