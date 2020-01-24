@@ -280,8 +280,8 @@ ceph_stable_release: mimic
 # avoid cluttering up your ansible repo. If you set `generate_fsid` to
 # false, you *must* generate `fsid` in another way.
 # ACTIVATE THE FSID VARIABLE FOR NON-VAGRANT DEPLOYMENT
-fsid: "{{ cluster_uuid.stdout }}"
-generate_fsid: true
+fsid: "fbe5fbc6-bf71-4b8c-ab98-2d5389553a6c"
+#generate_fsid: true
 
 #ceph_conf_key_directory: /etc/ceph
 
@@ -357,8 +357,8 @@ osd_pool_default_pg_num: 128
 osd_pool_default_size: 3
 
 cephfs_pools:
-  - { name: "{{ cephfs_data }}", pgs: "{{ osd_pool_default_pg_num }}", size: "{{ osd_pool_default_size }}" }
-  - { name: "{{ cephfs_metadata }}", pgs: "{{ osd_pool_default_pg_num }}", size: "{{ osd_pool_default_size }}" }
+  - { name: "{{ cephfs_data }}", pgs: "256", size: "{{ osd_pool_default_size }}" }
+  - { name: "{{ cephfs_metadata }}", pgs: "128", size: "{{ osd_pool_default_size }}" }
 
 ## OSD options
 #
@@ -406,7 +406,7 @@ mds_max_mds: 2
 # These variables must be defined at least in all.yml and overrided if needed (inventory host file or group_vars/*.yml).
 # Eg. If you want to specify for each radosgw node which address the radosgw will bind to you can set it in your **inventory host file** by using 'radosgw_address' variable.
 # Preference will go to radosgw_address if both radosgw_address and radosgw_interface are defined.
-radosgw_interface: breno3.206
+radosgw_interface: brbond0.206
 #radosgw_address: 0.0.0.0
 #radosgw_address_block: subnet
 #radosgw_keystone_ssl: true # activate this when using keystone PKI keys
@@ -585,8 +585,8 @@ radosgw_interface: breno3.206
 openstack_config: true
 openstack_glance_pool:
   name: "images"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
+  pg_num: 32
+  pgp_num: 32
   rule_name: "replicated_rule"
   type: 1
   erasure_profile: ""
@@ -595,58 +595,28 @@ openstack_glance_pool:
   size: "{{ osd_pool_default_size }}"
 openstack_cinder_pool:
   name: "volumes"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
+  pg_num: "1024"
+  pgp_num: "1024"
   rule_name: "replicated_rule"
   type: 1
   erasure_profile: ""
   expected_num_objects: ""
   application: "rbd"
   size: "{{ osd_pool_default_size }}"
-#openstack_nova_pool:
-#  name: "vms"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
-#  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
+openstack_nova_pool:
+  name: "vms"
+  pg_num: "128"
+  pgp_num: "128"
+  rule_name: "replicated_rule"
+  type: 1
+  erasure_profile: ""
+  expected_num_objects: ""
+  application: "rbd"
+  size: "{{ osd_pool_default_size }}"
 openstack_cinder_backup_pool:
   name: "backups"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
-  rule_name: "replicated_rule"
-  type: 1
-  erasure_profile: ""
-  expected_num_objects: ""
-  application: "rbd"
-  size: "{{ osd_pool_default_size }}"
-#openstack_gnocchi_pool:
-#  name: "metrics"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
-#  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-openstack_cephfs_data_pool:
-  name: "manila_data"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
-  rule_name: "replicated_rule"
-  type: 1
-  erasure_profile: ""
-  expected_num_objects: ""
-  application: "rbd"
-  size: "{{ osd_pool_default_size }}"
-openstack_cephfs_metadata_pool:
-  name: "manila_metadata"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
+  pg_num: "512"
+  pgp_num: "512"
   rule_name: "replicated_rule"
   type: 1
   erasure_profile: ""
@@ -657,12 +627,10 @@ openstack_cephfs_metadata_pool:
 openstack_pools:
   - "{{ openstack_glance_pool }}"
   - "{{ openstack_cinder_pool }}"
+  - "{{ openstack_cinder_backup_pool }}"
   - "{{ openstack_nova_pool }}"
-#  - "{{ openstack_cinder_backup_pool }}"
-#  - "{{ openstack_gnocchi_pool }}"
   - "{{ openstack_cephfs_data_pool }}"
   - "{{ openstack_cephfs_metadata_pool }}"
-
 
 # The value for 'key' can be a pre-generated key,
 # e.g key: "AQDC2UxZH4yeLhAAgTaZb+4wDUlYOsr1OfZSpQ=="
