@@ -276,7 +276,6 @@ lvm_volumes:
     db: ceph-ssd-m
     db_vg: ceph-ssd
 
-
 ##########
 # DOCKER #
 ##########
