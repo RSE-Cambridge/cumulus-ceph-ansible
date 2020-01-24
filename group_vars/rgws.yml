@@ -37,17 +37,25 @@ dummy:
 # of 8.
 # New pools and their corresponding pg_nums can be created
 # by adding to the rgw_create_pools dictionary (see foo).
-#rgw_create_pools:
-#  defaults.rgw.buckets.data:
-#    pg_num: 16
-#    size: ""
-#  defaults.rgw.buckets.index:
-#    pg_num: 32
-#    size: ""
-#  foo:
-#    pg_num: 4
-#    size: ""
-
+rgw_create_pools:
+  .rgw.root:
+    pg_num: 32
+    size: 3
+  defaults.rgw.buckets.control:
+    pg_num: 32
+    size: 3
+  defaults.rgw.buckets.meta:
+    pg_num: 32
+    size: 3
+  defaults.rgw.buckets.log:
+    pg_num: 32
+    size: 3
+  defaults.rgw.buckets.index:
+    pg_num: 64
+    size: 3
+  defaults.rgw.buckets.data:
+    pg_num: 512
+    size: 3
 
 ##########
 # DOCKER #
