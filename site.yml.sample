@@ -3,7 +3,6 @@
 
 - hosts:
   - mons
-  - agents
   - osds
   - mdss
   - rgws
@@ -97,6 +96,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -128,6 +128,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -138,37 +139,6 @@
       set_stats:
         data:
           installer_phase_ceph_mgr:
-            status: "Complete"
-            end: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
-
-- hosts: agents
-  gather_facts: false
-  become: True
-  any_errors_fatal: true
-  pre_tasks:
-    - name: set ceph agent install 'In Progress'
-      run_once: true
-      set_stats:
-        data:
-          installer_phase_ceph_agent:
-            status: "In Progress"
-            start: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
-  roles:
-    - role: ceph-defaults
-      tags: ['ceph_update_config']
-    - role: ceph-facts
-      tags: ['ceph_update_config']
-    - role: ceph-handler
-    - role: ceph-common
-    - role: ceph-config
-      tags: ['ceph_update_config']
-    - role: ceph-agent
-  post_tasks:
-    - name: set ceph agent install 'Complete'
-      run_once: true
-      set_stats:
-        data:
-          installer_phase_ceph_agent:
             status: "Complete"
             end: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
 
@@ -190,6 +160,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -221,6 +192,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -252,6 +224,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -283,6 +256,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -312,6 +286,7 @@
     - role: ceph-defaults
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -347,6 +322,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -378,6 +354,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-common
     - role: ceph-config
       tags: ['ceph_update_config']

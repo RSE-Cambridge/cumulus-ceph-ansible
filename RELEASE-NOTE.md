@@ -33,6 +33,8 @@ Deprecation warnings and incoming removal
 * ceph-disk based deployments will not be supported anymore, which means osd scenarios 'collocated' and 'non-collocated' will continue to work for existing OSDs but new deployments will not be possible
 * the next stable release will collocated monitor and managers on the same node by default, this will speed up deployments in general. Also manager are intended to run along side the monitor. This means declaring a `[mgrs]` won't be needed anymore
 * the next stable release will not enable any manager module, they will need to be explicitly declared via `ceph_mgr_modules`
+* the group name 'iscsi-gws' will go away in the next stable release
+* the rgw systemd service names in the following list won't be managed anymore in the next stable release: `ceph-rgw@<hostname>.service`, `ceph-radosgw@<hostname>.service`, `ceph-radosgw@radosgw.<hostname>.service`, `ceph-radosgw@radosgw.gateway.service`
 
 About ceph-disk transition to ceph-volume for containers ONLY
 -------------------------------------------------------------
@@ -556,7 +558,7 @@ Notable changes from stable-3.1
 * [98cb6ed8](https://github.com/ceph/ceph-ansible/commit/98cb6ed8) - tests: avoid yum failures (Guillaume Abrioux)
 * [144b2fce](https://github.com/ceph/ceph-ansible/commit/144b2fce) - python-netaddr is required to generate ceph.conf (Ha Phan)
 * [e91648a7](https://github.com/ceph/ceph-ansible/commit/e91648a7) - rolling_update: add role ceph-iscsi-gw (Sébastien Han)
-* [2890b57c](https://github.com/ceph/ceph-ansible/commit/2890b57c) - Add privilege escalation to iscsi purge tasks (Paul Cuzner)
+* [2890b57c](https://github.com/ceph/ceph-ansible/commit/2890b57c) - Add privilege escalation to iscsi purge tasks (Paul Cuzner)
 * [608ea947](https://github.com/ceph/ceph-ansible/commit/608ea947) - mds: move mds fs pools creation (Guillaume Abrioux)
 * [1c084efb](https://github.com/ceph/ceph-ansible/commit/1c084efb) - rgw: container add option to configure multi-site zone (Sébastien Han)
 * [82884801](https://github.com/ceph/ceph-ansible/commit/82884801) - playbook: follow up on #2553 (Guillaume Abrioux)

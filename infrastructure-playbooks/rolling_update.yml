@@ -105,7 +105,7 @@
       systemd:
         name: ceph-mon@{{ ansible_hostname }}
         state: stopped
-        enabled: yes
+        enabled: no
       ignore_errors: True
       when:
         - not containerized_deployment
@@ -114,7 +114,7 @@
       systemd:
         name: ceph-mon@{{ ansible_fqdn }}
         state: stopped
-        enabled: yes
+        enabled: no
       ignore_errors: True
       when:
         - not containerized_deployment
@@ -226,14 +226,14 @@
 
   pre_tasks:
     - name: non container - get current fsid
-      command: "ceph --cluster {{ cluster }} fsid"
+      command: "ceph --cluster {{ cluster }} fsid"
       register: cluster_uuid_non_container
       delegate_to: "{{ groups[mon_group_name][0] }}"
       when:
         - not containerized_deployment
 
     - name: container - get current fsid
-      command: "docker exec ceph-mon-{{ hostvars[groups[mon_group_name][0]]['ansible_hostname'] }} ceph --cluster {{ cluster }} fsid"
+      command: "docker exec ceph-mon-{{ hostvars[groups[mon_group_name][0]]['ansible_hostname'] }} ceph --cluster {{ cluster }} fsid"
       register: cluster_uuid_container
       delegate_to: "{{ groups[mon_group_name][0] }}"
       when:
@@ -326,6 +326,19 @@
         - containerized_deployment
 
 
+- name: set osd flags
+  hosts: "{{ mon_group_name | default('mons') }}[0]"
+  become: True
+  roles:
+    - ceph-defaults
+    - ceph-facts
+  post_tasks:
+    - name: set osd flags
+      command: "{{ docker_exec_cmd | default('') }} ceph --cluster {{ cluster }} osd set {{ item }}"
+      with_items:
+        - noout
+        - nodeep-scrub
+
 - name: upgrade ceph osds cluster
 
   vars:
@@ -340,17 +353,10 @@
   become: True
 
   pre_tasks:
-    - name: get osd numbers - non container
+    - name: get osd numbers
       shell: "if [ -d /var/lib/ceph/osd ] ; then ls /var/lib/ceph/osd | sed 's/.*-//' ; fi"
       register: osd_ids
       changed_when: false
-      when: not containerized_deployment
-
-    - name: get osd unit names - container
-      shell: systemctl list-units | grep -E "loaded * active" | grep -oE "ceph-osd@([0-9]{1,}|[a-z]+).service"
-      register: osd_names
-      changed_when: false
-      when: containerized_deployment
 
     - name: stop ceph osd
       systemd:
@@ -371,30 +377,13 @@
     - ceph-osd
 
   post_tasks:
-    - name: get osd numbers
-      shell: "if [ -d /var/lib/ceph/osd ] ; then ls /var/lib/ceph/osd | sed 's/.*-//' ; fi"
-      register: osd_ids
-      changed_when: false
-      when: not containerized_deployment
-
-    - name: start ceph osd
+    - name: restart ceph osd
       systemd:
-        name: ceph-osd@{{ item }}
-        state: started
-        enabled: yes
-      with_items: "{{ osd_ids.stdout_lines }}"
-      when:
-        - not containerized_deployment
-
-    - name: restart containerized ceph osd
-      systemd:
-        name: "{{ item }}"
+        name: "ceph-osd@{{ item }}"
         state: restarted
         enabled: yes
         daemon_reload: yes
-      with_items: "{{ osd_names.stdout_lines }}"
-      when:
-        - containerized_deployment
+      with_items: "{{ osd_ids.stdout_lines }}"
 
     - name: set_fact docker_exec_cmd_osd
       set_fact:
@@ -443,7 +432,7 @@
 - name: unset osd flags
 
   hosts:
-    - "{{ mon_group_name|default('mons') }}"
+    - "{{ mon_group_name | default('mons') }}[0]"
 
   become: True
 
@@ -459,21 +448,18 @@
         - containerized_deployment
 
     - name: unset osd flags
-      command: "{{ docker_exec_cmd_update_osd|default('') }} ceph osd unset {{ item }} --cluster {{ cluster }}"
+      command: "{{ docker_exec_cmd_update_osd | default('') }} ceph osd unset {{ item }} --cluster {{ cluster }}"
       with_items:
         - noout
-        - norebalance
-      delegate_to: "{{ groups[mon_group_name][0] }}"
+        - nodeep-scrub
 
     - name: get osd versions
       command: "{{ docker_exec_cmd_update_osd|default('') }} ceph --cluster {{ cluster }} versions"
       register: ceph_versions
-      delegate_to: "{{ groups[mon_group_name][0] }}"
 
     - name: set_fact ceph_versions_osd
       set_fact:
         ceph_versions_osd: "{{ (ceph_versions.stdout|from_json).osd }}"
-      delegate_to: "{{ groups[mon_group_name][0] }}"
 
     # length == 1 means there is a single osds versions entry
     # thus all the osds are running the same version
@@ -484,52 +470,195 @@
         - (ceph_versions.get('stdout', '{}')|from_json).get('osd', {}) | length == 1
         - ceph_versions_osd | string is search("ceph version 12")
 
-- name: upgrade ceph mdss cluster
 
-  vars:
-    upgrade_ceph_packages: True
-
-  hosts:
-    - "{{ mds_group_name|default('mdss') }}"
-
-  serial: 1
+- name: run crush rules on osd nodes
+  hosts: "{{ osd_group_name|default('osds') }}"
   become: True
-
-  pre_tasks:
-    - name: stop ceph mds
-      systemd:
-        name: ceph-mds@{{ ansible_hostname }}
-        state: stopped
-        enabled: yes
-      when:
-        - not containerized_deployment
-
+  tasks:
   roles:
     - ceph-defaults
     - ceph-facts
-    - ceph-handler
-    - { role: ceph-common, when: not containerized_deployment }
-    - { role: ceph-docker-common, when: containerized_deployment }
-    - ceph-config
-    - ceph-mds
+  post_tasks:
+    - import_role:
+        name: ceph-osd
+        tasks_from: crush_rules
+
+
+- name: upgrade ceph mdss cluster, deactivate all rank > 0
+  hosts: "{{ groups[mon_group_name|default('mons')][0] }}"
+  become: true
+  roles:
+    - role: ceph-defaults
+    - role: ceph-facts
+      when: groups.get(mds_group_name, []) | length > 1
 
   post_tasks:
-    - name: start ceph mds
+    - name: deactivate all mds rank > 0
+      when: groups.get(mds_group_name, []) | length > 1
+      block:
+        - name: get mds cluster status
+          command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} fs get {{ cephfs }} -f json"
+          changed_when: false
+          register: _cephfs_status
+
+        - name: get all mds names
+          command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} mds dump -f json"
+          changed_when: false
+          register: _all_mds_name
+
+        - name: set_fact all_mds_name
+          set_fact:
+            all_mds_name: "{{ all_mds_name | default([]) + [(_all_mds_name.stdout | from_json)['info'][item.key]['name'] ] }}"
+          with_dict: "{{ ((_all_mds_name.stdout | default('{}') | from_json).info | default({})) }}"
+
+        - name: set max_mds 1 on ceph fs
+          command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} fs set {{ cephfs }} max_mds 1"
+          changed_when: false
+          register: _max_mds_result
+
+        - name: deactivate all non-zero ranks
+          shell: |
+            #!/bin/bash
+            {{ docker_exec_cmd }} ceph --cluster {{ cluster }} mds deactivate {{ cephfs }}:{{ item }}
+            {{ docker_exec_cmd }} ceph --cluster {{ cluster }} fs get {{ cephfs }} -f json
+          register: deactivate_status
+          retries: 10
+          delay: 1
+          failed_when: false
+          until: item not in (deactivate_status.stdout | from_json).mdsmap.in
+          with_items: "{{ (_cephfs_status.stdout | default('{}') | from_json).mdsmap.in | default([]) | difference([0]) | sort(reverse=True) }}"
+
+        - name: get name of remaining active mds
+          command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} mds dump -f json"
+          changed_when: false
+          register: _mds_active_name
+
+        - name: set_fact mds_active_name
+          set_fact:
+            mds_active_name: "{{ (_mds_active_name.stdout | from_json)['info'][item.key]['name'] }}"
+          with_dict: "{{ (_mds_active_name.stdout | default('{}') | from_json).info | default({}) }}"
+
+        - name: set_fact mds_active_host
+          set_fact:
+            mds_active_host: "{{ hostvars[item]['inventory_hostname'] }}"
+          with_items: "{{ groups[mds_group_name] }}"
+          when: hostvars[item]['ansible_hostname'] == mds_active_name
+
+        - name: create standby_mdss group
+          add_host:
+            name: "{{ item }}"
+            groups: standby_mdss
+            ansible_host: "{{ hostvars[item]['ansible_host'] | default(omit) }}"
+            ansible_port: "{{ hostvars[item]['ansible_port'] | default(omit) }}"
+          with_items: "{{ groups[mds_group_name] | difference(mds_active_host) }}"
+
+        - name: stop standby ceph mds
+          systemd:
+            name: "ceph-mds@{{ hostvars[item]['ansible_hostname'] }}"
+            state: stopped
+            enabled: no
+          delegate_to: "{{ item }}"
+          with_items: "{{ groups['standby_mdss'] | default([]) }}"
+          when: groups['standby_mdss'] | default([]) | length > 0
+
+        # dedicated task for masking systemd unit
+        # somehow, having a single task doesn't work in containerized context
+        - name: mask stop standby ceph mds
+          systemd:
+            name: "ceph-mds@{{ hostvars[item]['ansible_hostname'] }}"
+            masked: yes
+          delegate_to: "{{ item }}"
+          with_items: "{{ groups['standby_mdss'] | default([]) }}"
+          when: groups['standby_mdss'] | default([]) | length > 0
+
+        - name: wait until all standbys mds are stopped
+          command: "{{ docker_exec_cmd | default('') }} ceph --cluster {{ cluster }} fs dump -f json"
+          changed_when: false
+          register: wait_standbys_down
+          retries: 300
+          delay: 5
+          until: (wait_standbys_down.stdout | from_json).standbys | length == 0
+
+    - name: create active_mdss group
+      add_host:
+        name: "{{ mds_active_host if mds_active_host is defined else groups.get(mds_group_name)[0] }}"
+        groups: active_mdss
+        ansible_host: "{{ hostvars[mds_active_host if mds_active_host is defined else groups.get(mds_group_name)[0]]['ansible_host'] | default(omit) }}"
+        ansible_port: "{{ hostvars[mds_active_host if mds_active_host is defined else groups.get(mds_group_name)[0]]['ansible_port'] | default(omit) }}"
+      when: groups.get(mds_group_name, []) | length > 0
+
+
+- name: upgrade active mds
+  vars:
+    upgrade_ceph_packages: True
+  hosts: active_mdss
+  become: true
+  pre_tasks:
+    - name: prevent restart from the packaging
       systemd:
         name: ceph-mds@{{ ansible_hostname }}
-        state: started
-        enabled: yes
-      when:
-        - not containerized_deployment
+        enabled: no
+        masked: yes
+      when: not containerized_deployment | bool
 
+  roles:
+    - role: ceph-defaults
+    - role: ceph-facts
+    - role: ceph-handler
+    - role: ceph-common
+      when: not containerized_deployment | bool
+    - role: ceph-docker-common
+      when: containerized_deployment | bool
+    - role: ceph-config
+    - role: ceph-mds
+
+  post_tasks:
+    - name: restart ceph mds
+      systemd:
+        name: ceph-mds@{{ ansible_hostname }}
+        state: restarted
+        enabled: yes
+        masked: no
+        daemon_reload: yes
+
+
+- name: upgrade standbys ceph mdss cluster
+  vars:
+    upgrade_ceph_packages: True
+  hosts: standby_mdss
+  become: True
+  pre_tasks:
+    - name: prevent restarts from the packaging
+      systemd:
+        name: ceph-mds@{{ ansible_hostname }}
+        enabled: no
+        masked: yes
+      when: not containerized_deployment | bool
+
+  roles:
+    - role: ceph-defaults
+    - role: ceph-facts
+    - role: ceph-handler
+    - role: ceph-common
+      when: not containerized_deployment | bool
+    - role: ceph-docker-common
+      when: containerized_deployment | bool
+    - role: ceph-config
+    - role: ceph-mds
+
+  post_tasks:
     - name: restart ceph mds
       systemd:
         name: ceph-mds@{{ ansible_hostname }}
         state: restarted
         enabled: yes
         daemon_reload: yes
-      when:
-        - containerized_deployment
+
+    - name: set max_mds
+      command: "{{ hostvars[groups[mon_group_name][0]]['docker_exec_cmd'] | default('') }} ceph --cluster {{ cluster }} fs set {{ cephfs }} max_mds {{ mds_max_mds }}"
+      changed_when: false
+      delegate_to: "{{ groups[mon_group_name][0] }}"
+      when: inventory_hostname == groups['standby_mdss'] | last
 
 
 - name: upgrade ceph rgws cluster
@@ -706,14 +835,17 @@
     # failed_when: false is here so that if we upgrade
     # from a version of ceph that does not have iscsi gws
     # then this task will not fail
-    - name: stop rbd-target-gw
+    - name: stop ceph iscsi services
       systemd:
-        name: rbd-target-gw
+        name: '{{ item }}'
         state: stopped
         enabled: yes
       failed_when: false
-      when:
-        - not containerized_deployment
+      with_items:
+        - rbd-target-api
+        - rbd-target-gw
+        - tcmu-runner
+      when: not containerized_deployment
 
   roles:
     - ceph-defaults
@@ -725,13 +857,16 @@
     - ceph-iscsi-gw
 
   post_tasks:
-    - name: start rbd-target-gw
+    - name: start ceph iscsi services
       systemd:
-        name: rbd-target-gw
+        name: '{{ item }}'
         state: started
         enabled: yes
-      when:
-        - not containerized_deployment
+      with_items:
+        - tcmu-runner
+        - rbd-target-api
+        - rbd-target-gw
+      when: not containerized_deployment
 
 
 - name: upgrade ceph client node

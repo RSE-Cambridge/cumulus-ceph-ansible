@@ -105,7 +105,7 @@ fetch_directory: ~/ceph-ansible-keys
 
 # Set type of NTP client daemon to use, valid entries are chronyd, ntpd or timesyncd
 # Note that this selection is currently ignored on containerized deployments
-#ntp_daemon_type: timesyncd
+#ntp_daemon_type: chronyd
 
 
 # Set uid/gid to default '64045' for bootstrap directories.
@@ -161,7 +161,7 @@ ceph_repository: rhcs
 #ceph_stable_repo: "{{ ceph_mirror }}/debian-{{ ceph_stable_release }}"
 
 #nfs_ganesha_stable: true # use stable repos for nfs-ganesha
-#nfs_ganesha_stable_branch: V2.6-stable
+#nfs_ganesha_stable_branch: V2.7-stable
 #nfs_ganesha_stable_deb_repo: "{{ ceph_mirror }}/nfs-ganesha/deb-{{ nfs_ganesha_stable_branch }}/{{ ceph_stable_release }}"
 
 
@@ -214,7 +214,7 @@ ceph_rhcs_version: 3
 #
 #ceph_stable_repo_uca: "http://ubuntu-cloud.archive.canonical.com/ubuntu"
 #ceph_stable_openstack_release_uca: queens
-#ceph_stable_release_uca: "{{ansible_lsb.codename}}-updates/{{ceph_stable_openstack_release_uca}}"
+#ceph_stable_release_uca: "{{ ansible_lsb.codename }}-updates/{{ ceph_stable_openstack_release_uca }}"
 
 # REPOSITORY: openSUSE OBS
 #
@@ -340,7 +340,7 @@ ceph_rhcs_version: 3
 # Eg. If you want to specify for each monitor which address the monitor will bind to you can set it in your **inventory host file** by using 'monitor_address' variable.
 # Preference will go to monitor_address if both monitor_address and monitor_interface are defined.
 #monitor_interface: interface
-#monitor_address: 0.0.0.0
+#monitor_address: x.x.x.x
 #monitor_address_block: subnet
 # set to either ipv4 or ipv6, whichever your network is using
 #ip_version: ipv4
@@ -372,6 +372,9 @@ ceph_rhcs_version: 3
 #osd_mount_options_xfs: noatime,largeio,inode64,swalloc
 #osd_objectstore: bluestore
 
+# Any device containing these patterns in their path will be excluded.
+#osd_auto_discovery_exclude: "dm-*|loop*|md*|rbd*"
+
 # xattrs. by default, 'filestore xattr use omap' is set to 'true' if
 # 'osd_mkfs_type' is set to 'ext4'; otherwise it isn't set. This can
 # be set to 'true' or 'false' to explicitly override those
@@ -386,17 +389,18 @@ ceph_rhcs_version: 3
 
 ## Rados Gateway options
 #
-#radosgw_frontend_type: civetweb # For additionnal frontends see: http://docs.ceph.com/docs/mimic/radosgw/frontends/
+#radosgw_frontend_type: civetweb # For additional frontends see: http://docs.ceph.com/docs/mimic/radosgw/frontends/
 
 #radosgw_civetweb_port: 8080
-#radosgw_civetweb_num_threads: 100
+#radosgw_civetweb_num_threads: 512
 #radosgw_civetweb_options: "num_threads={{ radosgw_civetweb_num_threads }}"
 # For additional civetweb configuration options available such as SSL, logging,
 # keepalive, and timeout settings, please see the civetweb docs at
 # https://github.com/civetweb/civetweb/blob/master/docs/UserManual.md
 
 #radosgw_frontend_port: "{{ radosgw_civetweb_port if radosgw_frontend_type == 'civetweb' else '8080' }}"
-#radosgw_frontend_options: "{{ radosgw_civetweb_options if radosgw_frontend_type == 'civetweb' }}"
+#radosgw_frontend_options: "{{ radosgw_civetweb_options if radosgw_frontend_type == 'civetweb' else '' }}"
+#radosgw_thread_pool_size: 512
 
 
 # You must define either radosgw_interface, radosgw_address.
@@ -404,7 +408,7 @@ ceph_rhcs_version: 3
 # Eg. If you want to specify for each radosgw node which address the radosgw will bind to you can set it in your **inventory host file** by using 'radosgw_address' variable.
 # Preference will go to radosgw_address if both radosgw_address and radosgw_interface are defined.
 #radosgw_interface: interface
-#radosgw_address: 0.0.0.0
+#radosgw_address: x.x.x.x
 #radosgw_address_block: subnet
 #radosgw_keystone_ssl: false # activate this when using keystone PKI keys
 # Rados Gateway options
@@ -481,13 +485,22 @@ ceph_rhcs_version: 3
 #rgw_multisite: false
 
 # The following Multi-site related variables should be set by the user.
+#
+# If there is more than 1 RGW in a master or secondary cluster than rgw_multisite_endpoints needs to be a comma seperated list (with no spaces) of the RGW endpoints in the format:
+# {{ rgw_multisite_proto }}://{{ ansible_fqdn }}:{{ radosgw_frontend_port }}
+# ex: rgw_multisite_endpoints: http://foo.example.com:8080,http://bar.example.com:8080,http://baz.example.com:8080
+#
+# If there is only 1 RGW in the inventory, rgw_multisite_endpoints does not need to change
+#
 # rgw_zone is set to "default" to enable compression for clusters configured without rgw multi-site
 # If multisite is configured rgw_zone should not be set to "default". See README-MULTISITE.md for an example.
 #rgw_zone: default
 
 #rgw_zonemaster: true
 #rgw_zonesecondary: false
+#rgw_multisite_proto: "http"
 #rgw_multisite_endpoint_addr: "{{ ansible_fqdn }}"
+#rgw_multisite_endpoints_list: "{{ rgw_multisite_proto }}://{{ ansible_fqdn }}:{{ radosgw_frontend_port }}"
 #rgw_zonegroup: solarsystem # should be set by the user
 #rgw_zone_user: zone.user
 #rgw_realm: milkyway # should be set by the user
@@ -496,8 +509,8 @@ ceph_rhcs_version: 3
 
 # Multi-site remote pull URL variables
 #rgw_pull_port: "{{ radosgw_civetweb_port }}"
-#rgw_pull_proto: "http"
-#rgw_pullhost: localhost # rgw_pullhost only needs to be declared if there is a zone secondary. It should be the same as rgw_multisite_endpoint_addr for the master cluster
+#rgw_pull_proto: "http" # should be the same as rgw_multisite_proto for the master zone cluster
+#rgw_pullhost: localhost # rgw_pullhost only needs to be declared if there is a zone secondary. It should be the same as rgw_multisite_endpoint_addr for the master zone cluster
 
 
 ###################

@@ -3,7 +3,6 @@
 
 - hosts:
   - mons
-  - agents
   - osds
   - mdss
   - rgws
@@ -25,8 +24,8 @@
   pre_tasks:
     - name: gather facts
       setup:
-      when:
-        - not delegate_facts_host | bool
+      when: not delegate_facts_host | bool
+      tags: always
 
     - name: gather and delegate facts
       setup:
@@ -34,21 +33,19 @@
       delegate_facts: True
       with_items: "{{ groups['all'] }}"
       run_once: true
-      when:
-        - delegate_facts_host | bool
+      when: delegate_facts_host | bool
+      tags: always
 
     - name: check if it is atomic host
       stat:
         path: /run/ostree-booted
       register: stat_ostree
-      tags:
-        - always
+      tags: always
 
     - name: set_fact is_atomic
       set_fact:
         is_atomic: '{{ stat_ostree.stat.exists }}'
-      tags:
-        - always
+      tags: always
 
   roles:
     - role: ceph-defaults
@@ -75,6 +72,7 @@
 
 - hosts: mons
   any_errors_fatal: true
+  gather_facts: false
   tasks:
     - name: set ceph monitor install 'In Progress'
       run_once: true
@@ -94,6 +92,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -102,6 +101,7 @@
 
 - hosts: mons
   any_errors_fatal: true
+  gather_facts: false
   tasks:
     - name: set ceph monitor install 'Complete'
       run_once: true
@@ -129,6 +129,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -160,6 +161,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -191,6 +193,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -222,6 +225,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -253,6 +257,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -284,6 +289,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -315,6 +321,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
     - role: ceph-config
       tags: ['ceph_update_config']
@@ -350,6 +357,7 @@
     - role: ceph-facts
       tags: ['ceph_update_config']
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - role: ceph-docker-common
       when:
         - inventory_hostname == groups.get('clients', ['']) | first
@@ -383,6 +391,7 @@
     - { role: ceph-defaults, tags: ['ceph_update_config'] }
     - { role: ceph-facts, tags: ['ceph_update_config'] }
     - role: ceph-handler
+      tags: ['ceph_update_config']
     - ceph-docker-common
     - { role: ceph-config, tags: ['ceph_update_config'] }
     - ceph-iscsi-gw

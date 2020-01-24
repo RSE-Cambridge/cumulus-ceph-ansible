@@ -9,7 +9,6 @@ mon_group_name: mons
 # ACTIVATE BOTH FSID AND MONITOR_SECRET VARIABLES FOR NON-VAGRANT DEPLOYMENT
 monitor_secret: "{{ monitor_keyring.stdout }}"
 admin_secret: 'admin_secret'
-mgr_secret: 'mgr_secret'
 
 # Secure your cluster
 # This will set the following flags on all the pools:
@@ -36,14 +35,16 @@ crush_rule_config: false
 
 crush_rule_hdd:
   name: HDD
-  root: HDD
+  root: default
   type: host
+  class: hdd
   default: false
 
 crush_rule_ssd:
   name: SSD
-  root: SSD
+  root: default
   type: host
+  class: ssd
   default: false
 
 crush_rules:
@@ -67,7 +68,7 @@ create_crush_tree: false
 
 # Resource limitation
 # For the whole list of limits you can apply see: docs.docker.com/engine/admin/resource_constraints
-# Default values are based from: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/2/html/red_hat_ceph_storage_hardware_guide/minimum_recommendations
+# Default values are based from: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/html/red_hat_ceph_storage_hardware_selection_guide/ceph-hardware-min-recommend
 # These options can be passed using the 'ceph_mon_docker_extra_env' variable.
 ceph_mon_docker_memory_limit: "{{ ansible_memtotal_mb }}m"
 ceph_mon_docker_cpu_limit: 1

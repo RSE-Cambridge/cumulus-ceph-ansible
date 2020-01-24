@@ -39,7 +39,6 @@ devices: []
 
 
 #'osd_auto_discovery'  mode prevents you from filling out the 'devices' variable above.
-#  You can use this option with First and Forth and Fifth OSDS scenario.
 # Device discovery is based on the Ansible fact 'ansible_devices'
 # which reports all the devices on a system. If chosen all the disks
 # found will be passed to ceph-disk. You should not be worried on using
@@ -133,7 +132,6 @@ valid_osd_scenarios:
 # /dev/sda2: PARTLABEL="ceph block" PARTUUID="ea454807-983a-4cf2-899e-b2680643bc1c"
 # /dev/sdb: PTTYPE="gpt"
 # /dev/sdb1: PARTLABEL="ceph block.db" PARTUUID="af5b2d74-4c08-42cf-be57-7248c739e217"
-# /dev/sdb2: PARTLABEL="ceph block.wal" PARTUUID="af3f8327-9aa9-4c2b-a497-cf0fe96d126a"
 #
 # Note: This scenario uses the ceph-disk tool to provision OSDs
 dedicated_devices: []
@@ -143,7 +141,7 @@ dedicated_devices: []
 #
 # ONLY if osd_objectstore: bluestore is enabled.
 #
-# By default, if 'bluestore_wal_devices' is empty, it will get the content of 'dedicated_devices'.
+# By default, if 'bluestore_wal_devices' is empty.
 # If set, then you will have a dedicated partition on a specific device for block.wal.
 #
 # Set bluestore_wal_devices: [] to use the same partition for RocksDB and WAL.
@@ -158,7 +156,7 @@ dedicated_devices: []
 # /dev/sdc: PTTYPE="gpt"
 # /dev/sdc1: PARTLABEL="ceph block.wal" PARTUUID="824b84ba-6777-4272-bbbd-bfe2a25cecf3"
 # Note: This option uses the ceph-disk tool
-bluestore_wal_devices: "{{ dedicated_devices }}"
+bluestore_wal_devices: []
 
 # III. Use ceph-volume to create OSDs from logical volumes.
 # Use 'osd_scenario: lvm' to enable this scenario.
@@ -226,10 +224,10 @@ ceph_config_keys: [] # DON'T TOUCH ME
 
 # Resource limitation
 # For the whole list of limits you can apply see: docs.docker.com/engine/admin/resource_constraints
-# Default values are based from: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/2/html/red_hat_ceph_storage_hardware_guide/minimum_recommendations
+# Default values are based from: https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/3/html/red_hat_ceph_storage_hardware_selection_guide/ceph-hardware-min-recommend
 # These options can be passed using the 'ceph_osd_docker_extra_env' variable.
 ceph_osd_docker_memory_limit: "{{ ansible_memtotal_mb }}m"
-ceph_osd_docker_cpu_limit: 1
+ceph_osd_docker_cpu_limit: 4
 
 # The next two variables are undefined, and thus, unused by default.
 # If `lscpu | grep NUMA` returned the following:
